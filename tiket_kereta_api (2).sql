@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 04, 2018 at 06:32 PM
+-- Generation Time: Dec 05, 2018 at 02:19 AM
 -- Server version: 10.1.37-MariaDB
 -- PHP Version: 7.2.12
 
@@ -23,6 +23,84 @@ SET time_zone = "+00:00";
 --
 CREATE DATABASE IF NOT EXISTS `tiket_kereta_api` DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci;
 USE `tiket_kereta_api`;
+
+DELIMITER $$
+--
+-- Procedures
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `check_phone_number` (IN `no` VARCHAR(20))  NO SQL
+BEGIN
+    DECLARE panjang_no varchar(20) default "hello world1";
+    DECLARE awal_no varchar(20) default "hello world2";
+    DECLARE str_int_no varchar(20) default "hello world3";
+		DECLARE i int default 1;
+    DECLARE kondisi int default 1; /*asumsi data masih benar*/
+		
+    SET panjang_no = length(no);
+    SET awal_no = substring(no, 1, 1);
+    SET str_int_no = cast(no AS signed);
+		
+IF awal_no != '0' THEN 
+    	SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Maaf, input nomor harus dimulai nol (0)';
+      	/* SELECT 'Maaf, input nomor harus dimulai nol (0)'; */
+ELSEIF panjang_no < 7 THEN
+		SIGNAL SQLSTATE '45001'
+            SET MESSAGE_TEXT = 'Maaf, batas minimal digit nomor telepon = 7';
+        /*SELECT 'Maaf, batas minimal digit nomor telepon = 7'; */
+ELSEIF panjang_no > 15 THEN
+		SIGNAL SQLSTATE '45002'
+            SET MESSAGE_TEXT = 'Maaf, batas maksimal digit nomor HP = 13';
+        /*SELECT 'Maaf, batas maksimal digit nomor HP = 15';*/
+ELSEIF str_int_no < 100000 THEN
+		SIGNAL SQLSTATE '45003'
+            SET MESSAGE_TEXT = 'Maaf, no telepon harus menggunakan angka';
+        /*SELECT 'Maaf, no telepon harus menggunakan angka';*/
+END IF;
+
+IF panjang_no = 8 && str_int_no < 1000000 THEN /*Digit ke 8, awal angka nol input tidak dihitung*/
+		SIGNAL SQLSTATE '45003'
+            SET MESSAGE_TEXT = 'Maaf, no telepon harus menggunakan angka';
+        /*SELECT 'Maaf, no telepon harus menggunakan angka';*/
+END IF;
+IF panjang_no = 9 && str_int_no < 10000000 THEN /*Digit ke 9, awal angka nol input tidak dihitung*/
+		SIGNAL SQLSTATE '45003'
+            SET MESSAGE_TEXT = 'Maaf, no telepon harus menggunakan angka';
+        /*SELECT 'Maaf, no telepon harus menggunakan angka';*/
+END IF;
+IF panjang_no = 10 && str_int_no < 100000000 THEN /*Digit ke 10, awal angka nol input tidak dihitung*/
+		SIGNAL SQLSTATE '45003'
+            SET MESSAGE_TEXT = 'Maaf, no telepon harus menggunakan angka';
+        /*SELECT 'Maaf, no telepon harus menggunakan angka';*/
+END IF;
+IF panjang_no = 11 && str_int_no < 1000000000 THEN /*Digit ke 11, awal angka nol input tidak dihitung*/
+		SIGNAL SQLSTATE '45003'
+            SET MESSAGE_TEXT = 'Maaf, no telepon harus menggunakan angka';
+        /*SELECT 'Maaf, no telepon harus menggunakan angka';*/
+END IF;
+IF panjang_no = 12 && str_int_no < 10000000000 THEN /*Digit ke 12, awal angka nol input tidak dihitung*/
+		SIGNAL SQLSTATE '45003'
+            SET MESSAGE_TEXT = 'Maaf, no telepon harus menggunakan angka';
+        /*SELECT 'Maaf, no telepon harus menggunakan angka';*/
+END IF;
+IF panjang_no = 13 && str_int_no < 100000000000 THEN /*Digit ke 13, awal angka nol input tidak dihitung*/
+		SIGNAL SQLSTATE '45003'
+            SET MESSAGE_TEXT = 'Maaf, no telepon harus menggunakan angka';
+        /*SELECT 'Maaf, no telepon harus menggunakan angka';*/
+END IF;
+IF panjang_no = 14 && str_int_no < 1000000000000 THEN /*Digit ke 14, awal angka nol input tidak dihitung*/
+		SIGNAL SQLSTATE '45003'
+            SET MESSAGE_TEXT = 'Maaf, no telepon harus menggunakan angka';
+        /*SELECT 'Maaf, no telepon harus menggunakan angka';*/        
+END IF;
+IF panjang_no = 15 && str_int_no < 10000000000000 THEN /*Digit ke 14, awal angka nol input tidak dihitung*/
+		SIGNAL SQLSTATE '45003'
+            SET MESSAGE_TEXT = 'Maaf, no telepon harus menggunakan angka';
+        /*SELECT 'Maaf, no telepon harus menggunakan angka';*/        
+END IF;
+END$$
+
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -82,6 +160,22 @@ INSERT INTO `anonim` (`ID`, `nama`, `email`, `no_tlp`, `tgl_lahir`) VALUES
 (1, 'irfan muhammad', 'irfanmuhammad@gmail.com', '089112112321', '1998-07-13'),
 (2, 'ahmad maulana', 'ahmadmaulana@gmail.com', '089765432253', '1998-09-01');
 
+--
+-- Triggers `anonim`
+--
+DELIMITER $$
+CREATE TRIGGER `anonim_no_tlp_before_insert` BEFORE INSERT ON `anonim` FOR EACH ROW BEGIN
+CALL check_phone_number(new.no_tlp);
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `anonim_no_tlp_before_update` BEFORE UPDATE ON `anonim` FOR EACH ROW BEGIN
+CALL check_phone_number(new.no_tlp);
+END
+$$
+DELIMITER ;
+
 -- --------------------------------------------------------
 
 --
@@ -115,6 +209,22 @@ INSERT INTO `customer` (`ID`, `nama`, `email`, `password`, `cash`, `no_tlp`, `tg
 (1, 'ridjal zuhri', 'ridjalzuhri@gmail.com', 'bee0f0a44794f513e9f7595bd3fe0e75', 500000, '089656826182', '1998-07-03', 'Kebumen'),
 (2, 'Muhammad Furqan', 'mfurqan@gmail.com', '813a1997eeb66cf48a6e9cc27c940fa1', 300000, '081327599014', '1998-03-03', 'Garut');
 
+--
+-- Triggers `customer`
+--
+DELIMITER $$
+CREATE TRIGGER `customer_no_tlp_before_insert` BEFORE INSERT ON `customer` FOR EACH ROW BEGIN
+CALL check_phone_number(new.no_tlp);
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `customer_no_tlp_before_update` BEFORE UPDATE ON `customer` FOR EACH ROW BEGIN
+CALL check_phone_number(new.no_tlp);
+END
+$$
+DELIMITER ;
+
 -- --------------------------------------------------------
 
 --
@@ -143,11 +253,11 @@ CREATE TABLE IF NOT EXISTS `gerbong` (
 --
 
 INSERT INTO `gerbong` (`ID`, `kd_kereta`, `no_gerbong`, `kelas`) VALUES
-(1, 'Malabar 23', '1', 'Eksekutif'),
-(2, 'Malabar 23', '2', 'Eksekutif'),
-(3, 'Malabar 23', '3', 'Bisnis'),
-(4, 'Malabar 23', '4', 'Bisnis'),
-(5, 'Malabar 23', '5', 'Ekonomi');
+(1, 'Malabar 13', '1', 'Eksekutif'),
+(2, 'Malabar 13', '2', 'Eksekutif'),
+(3, 'Malabar 13', '3', 'Bisnis'),
+(4, 'Malabar 13', '4', 'Bisnis'),
+(5, 'Malabar 13', '5', 'Ekonomi');
 
 -- --------------------------------------------------------
 
@@ -222,11 +332,11 @@ CREATE TABLE IF NOT EXISTS `jadwal` (
 --
 
 INSERT INTO `jadwal` (`ID`, `kd_kereta`, `tgl_keberangkatan`, `kd_stasiun_keberangkatan`, `kd_stasiun_tujuan`, `waktu_berangkat`, `waktu_tiba`, `status`, `harga_tiket`) VALUES
-(1, 'Malabar 23', '2018-12-05', 'ML', 'BD', '16:00:00', '07:48:00', 'Tersedia', 360000),
-(2, 'Malabar 23', '2018-12-05', 'ML', 'BD', '16:00:00', '07:48:00', 'Tersedia', 360000),
-(3, 'Malabar 23', '2018-12-05', 'ML', 'BD', '16:00:00', '07:48:00', 'Tersedia', 270000),
-(4, 'Malabar 23', '2018-12-05', 'ML', 'BD', '16:00:00', '07:48:00', 'Tersedia', 270000),
-(5, 'Malabar 23', '2018-12-05', 'ML', 'BD', '16:00:00', '07:48:00', 'Tersedia', 160000);
+(1, 'Malabar 13', '2018-12-05', 'ML', 'BD', '16:00:00', '07:48:00', 'Tersedia', 360000),
+(2, 'Malabar 13', '2018-12-05', 'ML', 'BD', '16:00:00', '07:48:00', 'Tersedia', 360000),
+(3, 'Malabar 13', '2018-12-05', 'ML', 'BD', '16:00:00', '07:48:00', 'Tersedia', 270000),
+(4, 'Malabar 13', '2018-12-05', 'ML', 'BD', '16:00:00', '07:48:00', 'Tersedia', 270000),
+(5, 'Malabar 13', '2018-12-05', 'ML', 'BD', '16:00:00', '07:48:00', 'Tersedia', 160000);
 
 -- --------------------------------------------------------
 
@@ -252,7 +362,7 @@ CREATE TABLE IF NOT EXISTS `kereta` (
 --
 
 INSERT INTO `kereta` (`ID`, `nama`) VALUES
-(1, 'Malabar 23');
+(1, 'Malabar 13');
 
 -- --------------------------------------------------------
 
@@ -607,7 +717,7 @@ INSERT INTO `stasiun` (`ID`, `kd_stasiun`, `kota_utama`, `sub_stasiun`) VALUES
 --
 -- Table structure for table `tiket`
 --
--- Creation: Dec 04, 2018 at 04:18 PM
+-- Creation: Dec 04, 2018 at 05:53 PM
 --
 
 CREATE TABLE IF NOT EXISTS `tiket` (
@@ -618,8 +728,8 @@ CREATE TABLE IF NOT EXISTS `tiket` (
   `no_id` varchar(30) NOT NULL,
   `id_kursi` int(1) UNSIGNED NOT NULL,
   PRIMARY KEY (`ID`),
-  UNIQUE KEY `fk_id_kursi_tiket` (`id_kursi`) USING BTREE,
-  KEY `fk_id_pemesanan_tiket` (`id_pemesanan`)
+  KEY `fk_id_pemesanan_tiket` (`id_pemesanan`),
+  KEY `fk_id_kursi_tiket` (`id_kursi`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 
 --
