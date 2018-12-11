@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 11, 2018 at 02:54 PM
+-- Generation Time: Dec 11, 2018 at 03:00 PM
 -- Server version: 10.1.37-MariaDB
 -- PHP Version: 7.2.12
 
@@ -865,7 +865,7 @@ DELIMITER $$
 --
 -- Events
 --
-CREATE DEFINER=`root`@`localhost` EVENT `update_pemesanan_status` ON SCHEDULE EVERY 10 SECOND STARTS '2018-12-11 00:00:00' ENDS '2019-01-01 00:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL update_pemesanan_status()$$
+CREATE DEFINER=`root`@`localhost` EVENT `update_pemesanan_status` ON SCHEDULE EVERY 1 SECOND STARTS '2018-12-11 00:00:00' ENDS '2019-01-01 00:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL update_pemesanan_status()$$
 
 DELIMITER ;
 COMMIT;
