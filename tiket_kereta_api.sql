@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 05, 2018 at 02:19 AM
+-- Generation Time: Dec 11, 2018 at 02:54 PM
 -- Server version: 10.1.37-MariaDB
 -- PHP Version: 7.2.12
 
@@ -98,6 +98,46 @@ IF panjang_no = 15 && str_int_no < 10000000000000 THEN /*Digit ke 14, awal angka
             SET MESSAGE_TEXT = 'Maaf, no telepon harus menggunakan angka';
         /*SELECT 'Maaf, no telepon harus menggunakan angka';*/        
 END IF;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `update_pemesanan_status` ()  NO SQL
+BEGIN
+	DECLARE vtgl_pemesanan datetime;
+    DECLARE vbatas_waktu_pemesanan datetime;
+	DECLARE vperbedaan_waktu time;
+    DECLARE vperbedaan_waktu_integer int;
+	DECLARE vstatus_waktu varchar(1);
+    
+	DECLARE done int default false;
+
+	DECLARE cur1 CURSOR FOR SELECT tgl_pemesanan from pemesanan WHERE pemesanan.status = 'Proses';
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+	OPEN cur1;
+
+	read_loop: LOOP
+		FETCH cur1 INTO vtgl_pemesanan;
+        
+        if done then
+	 		LEAVE read_loop;	
+	 	END if;
+	 	
+        SET vbatas_waktu_pemesanan = addtime(vtgl_pemesanan, '01:00:00');
+        
+        SET vperbedaan_waktu = TIMEDIFF(vbatas_waktu_pemesanan, now());             
+        SET vperbedaan_waktu_integer = CAST(vperbedaan_waktu AS SIGNED);
+        
+        SET vstatus_waktu = substring(vperbedaan_waktu, 1, 1);
+        
+        if vstatus_waktu = '-' || vperbedaan_waktu_integer = 0 then
+			update pemesanan set pemesanan.status = 'Gagal' WHERE tgl_pemesanan = vtgl_pemesanan;
+            
+		END if;
+		
+	END LOOP read_loop;
+
+	CLOSE cur1;
+    
 END$$
 
 DELIMITER ;
@@ -660,7 +700,7 @@ CREATE TABLE IF NOT EXISTS `pemesanan` (
   KEY `fk_kd_pembeli_customer_pemesanan` (`kd_pembeli_customer`),
   KEY `fk_id_jadwal_pemesanan` (`id_jadwal`),
   KEY `fk_id_harga_pemesanan` (`id_harga`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
 
 --
 -- RELATIONSHIPS FOR TABLE `pemesanan`:
@@ -679,8 +719,9 @@ CREATE TABLE IF NOT EXISTS `pemesanan` (
 --
 
 INSERT INTO `pemesanan` (`ID`, `kd_pembeli_customer`, `kd_pembeli_anonim`, `tgl_pemesanan`, `id_jadwal`, `id_harga`, `jumlah_tiket_dewasa`, `jumlah_tiket_bayi`, `total_harga`, `status`, `kode_booking`) VALUES
-(1, NULL, 'ahmadmaulana@gmail.com', '2018-12-05 10:00:00', 1, 1, 1, 0, 360000, 'Proses', 'KB0001'),
-(2, 'mfurqan@gmail.com', NULL, '2018-12-05 07:00:00', 2, 2, 2, 0, 540000, 'Proses', 'KB0002');
+(1, NULL, 'ahmadmaulana@gmail.com', '2018-12-05 10:00:00', 1, 1, 1, 0, 360000, 'Berhasil', 'KB0001'),
+(2, 'mfurqan@gmail.com', NULL, '2018-12-05 07:00:00', 2, 2, 2, 0, 540000, 'Gagal', ''),
+(3, 'mfurqan@gmail.com', NULL, '2018-12-11 19:00:00', 2, 2, 2, 0, 540000, 'Gagal', '');
 
 -- --------------------------------------------------------
 
@@ -711,6 +752,17 @@ INSERT INTO `stasiun` (`ID`, `kd_stasiun`, `kota_utama`, `sub_stasiun`) VALUES
 (1, 'ML', 'Malang', 'Malang'),
 (2, 'BD', 'Bandung', 'Bandung'),
 (3, 'KAC', 'Bandung', 'Kiaracondong');
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `temp`
+-- (See below for the actual view)
+--
+CREATE TABLE IF NOT EXISTS `temp` (
+`tgl_pemesanan` datetime
+,`status` enum('Gagal','Proses','Berhasil')
+);
 
 -- --------------------------------------------------------
 
@@ -746,6 +798,15 @@ CREATE TABLE IF NOT EXISTS `tiket` (
 
 INSERT INTO `tiket` (`ID`, `id_pemesanan`, `nama`, `kategori`, `no_id`, `id_kursi`) VALUES
 (1, 2, 'Muhammad Furqan', 'Dewasa', '1604321', 260);
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `temp`
+--
+DROP TABLE IF EXISTS `temp`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `temp`  AS  select `pemesanan`.`tgl_pemesanan` AS `tgl_pemesanan`,`pemesanan`.`status` AS `status` from `pemesanan` where (`pemesanan`.`status` = 'Proses') ;
 
 --
 -- Constraints for dumped tables
@@ -799,6 +860,14 @@ ALTER TABLE `pemesanan`
 ALTER TABLE `tiket`
   ADD CONSTRAINT `fk_id_kursi_tiket` FOREIGN KEY (`id_kursi`) REFERENCES `kursi` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_id_pemesanan_tiket` FOREIGN KEY (`id_pemesanan`) REFERENCES `pemesanan` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+DELIMITER $$
+--
+-- Events
+--
+CREATE DEFINER=`root`@`localhost` EVENT `update_pemesanan_status` ON SCHEDULE EVERY 10 SECOND STARTS '2018-12-11 00:00:00' ENDS '2019-01-01 00:00:00' ON COMPLETION NOT PRESERVE ENABLE DO CALL update_pemesanan_status()$$
+
+DELIMITER ;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
