@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 14, 2018 at 08:44 AM
+-- Generation Time: Dec 14, 2018 at 11:33 AM
 -- Server version: 10.1.37-MariaDB
 -- PHP Version: 7.2.12
 
@@ -50,7 +50,7 @@ ELSEIF panjang_no < 7 THEN
         /*SELECT 'Maaf, batas minimal digit nomor telepon = 7'; */
 ELSEIF panjang_no > 15 THEN
 		SIGNAL SQLSTATE '45002'
-            SET MESSAGE_TEXT = 'Maaf, batas maksimal digit nomor HP = 15';
+            SET MESSAGE_TEXT = 'Maaf, batas maksimal digit nomor HP = 13';
         /*SELECT 'Maaf, batas maksimal digit nomor HP = 15';*/
 ELSEIF str_int_no < 100000 THEN
 		SIGNAL SQLSTATE '45003'
@@ -93,7 +93,7 @@ IF panjang_no = 14 && str_int_no < 1000000000000 THEN /*Digit ke 14, awal angka 
             SET MESSAGE_TEXT = 'Maaf, no telepon harus menggunakan angka';
         /*SELECT 'Maaf, no telepon harus menggunakan angka';*/        
 END IF;
-IF panjang_no = 15 && str_int_no < 10000000000000 THEN /*Digit ke 15, awal angka nol input tidak dihitung*/
+IF panjang_no = 15 && str_int_no < 10000000000000 THEN /*Digit ke 14, awal angka nol input tidak dihitung*/
 		SIGNAL SQLSTATE '45003'
             SET MESSAGE_TEXT = 'Maaf, no telepon harus menggunakan angka';
         /*SELECT 'Maaf, no telepon harus menggunakan angka';*/        
@@ -437,13 +437,13 @@ INSERT INTO `kereta` (`ID`, `nama`) VALUES
 --
 -- Table structure for table `konfirmasi`
 --
--- Creation: Dec 04, 2018 at 11:39 AM
+-- Creation: Dec 14, 2018 at 10:31 AM
 --
 
 CREATE TABLE IF NOT EXISTS `konfirmasi` (
   `ID` int(1) UNSIGNED NOT NULL AUTO_INCREMENT,
   `id_pemesanan` int(1) UNSIGNED NOT NULL,
-  `id_admin` int(1) UNSIGNED NOT NULL,
+  `id_admin` int(1) UNSIGNED DEFAULT NULL,
   `status` enum('Menunggu Pembayaran','Menunggu Konfirmasi','Gagal','Berhasil') NOT NULL DEFAULT 'Menunggu Pembayaran',
   PRIMARY KEY (`ID`),
   UNIQUE KEY `fk_id_pemesanan_konfirmasi` (`id_pemesanan`) USING BTREE,
