@@ -50,7 +50,7 @@ ELSEIF panjang_no < 7 THEN
         /*SELECT 'Maaf, batas minimal digit nomor telepon = 7'; */
 ELSEIF panjang_no > 15 THEN
 		SIGNAL SQLSTATE '45002'
-            SET MESSAGE_TEXT = 'Maaf, batas maksimal digit nomor HP = 13';
+            SET MESSAGE_TEXT = 'Maaf, batas maksimal digit nomor HP = 15';
         /*SELECT 'Maaf, batas maksimal digit nomor HP = 15';*/
 ELSEIF str_int_no < 100000 THEN
 		SIGNAL SQLSTATE '45003'
@@ -93,7 +93,7 @@ IF panjang_no = 14 && str_int_no < 1000000000000 THEN /*Digit ke 14, awal angka 
             SET MESSAGE_TEXT = 'Maaf, no telepon harus menggunakan angka';
         /*SELECT 'Maaf, no telepon harus menggunakan angka';*/        
 END IF;
-IF panjang_no = 15 && str_int_no < 10000000000000 THEN /*Digit ke 14, awal angka nol input tidak dihitung*/
+IF panjang_no = 15 && str_int_no < 10000000000000 THEN /*Digit ke 15, awal angka nol input tidak dihitung*/
 		SIGNAL SQLSTATE '45003'
             SET MESSAGE_TEXT = 'Maaf, no telepon harus menggunakan angka';
         /*SELECT 'Maaf, no telepon harus menggunakan angka';*/        
