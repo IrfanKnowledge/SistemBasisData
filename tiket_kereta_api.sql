@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 11, 2018 at 03:00 PM
+-- Generation Time: Dec 14, 2018 at 08:44 AM
 -- Server version: 10.1.37-MariaDB
 -- PHP Version: 7.2.12
 
@@ -100,23 +100,52 @@ IF panjang_no = 15 && str_int_no < 10000000000000 THEN /*Digit ke 14, awal angka
 END IF;
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `update_kursi_status` (IN `id_pemesanan` INT(1) UNSIGNED)  NO SQL
+BEGIN     
+    DECLARE vid_kursi int(1);
+    
+	DECLARE done int default false;
+
+	DECLARE cur1 CURSOR FOR SELECT id_kursi from tiket WHERE tiket.id_pemesanan = id_pemesanan;    
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+OPEN cur1;
+
+	read_loop: LOOP
+		FETCH cur1 INTO vid_kursi;
+        
+        if done then
+	 		LEAVE read_loop;	
+	 	END if;
+        
+        UPDATE kursi SET kursi.status = 'Kosong' WHERE ID = vid_kursi;
+        
+	END LOOP read_loop;
+
+	CLOSE cur1;
+    
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `update_pemesanan_status` ()  NO SQL
 BEGIN
 	DECLARE vtgl_pemesanan datetime;
     DECLARE vbatas_waktu_pemesanan datetime;
 	DECLARE vperbedaan_waktu time;
-    DECLARE vperbedaan_waktu_integer int;
+    DECLARE vperbedaan_waktu_integer int(1);
 	DECLARE vstatus_waktu varchar(1);
+    
+    DECLARE vid_pemesanan int(1); 
+    DECLARE vid_kursi int(1);
     
 	DECLARE done int default false;
 
-	DECLARE cur1 CURSOR FOR SELECT tgl_pemesanan from pemesanan WHERE pemesanan.status = 'Proses';
+	DECLARE cur1 CURSOR FOR SELECT ID, tgl_pemesanan from pemesanan WHERE pemesanan.status = 'Proses';    
 	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
 
-	OPEN cur1;
+OPEN cur1;
 
 	read_loop: LOOP
-		FETCH cur1 INTO vtgl_pemesanan;
+		FETCH cur1 INTO vid_pemesanan, vtgl_pemesanan;
         
         if done then
 	 		LEAVE read_loop;	
@@ -131,9 +160,8 @@ BEGIN
         
         if vstatus_waktu = '-' || vperbedaan_waktu_integer = 0 then
 			update pemesanan set pemesanan.status = 'Gagal' WHERE tgl_pemesanan = vtgl_pemesanan;
-            
-		END if;
-		
+            CALL update_kursi_status(vid_pemesanan);
+        END IF;
 	END LOOP read_loop;
 
 	CLOSE cur1;
@@ -756,17 +784,6 @@ INSERT INTO `stasiun` (`ID`, `kd_stasiun`, `kota_utama`, `sub_stasiun`) VALUES
 -- --------------------------------------------------------
 
 --
--- Stand-in structure for view `temp`
--- (See below for the actual view)
---
-CREATE TABLE IF NOT EXISTS `temp` (
-`tgl_pemesanan` datetime
-,`status` enum('Gagal','Proses','Berhasil')
-);
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `tiket`
 --
 -- Creation: Dec 04, 2018 at 05:53 PM
@@ -798,15 +815,6 @@ CREATE TABLE IF NOT EXISTS `tiket` (
 
 INSERT INTO `tiket` (`ID`, `id_pemesanan`, `nama`, `kategori`, `no_id`, `id_kursi`) VALUES
 (1, 2, 'Muhammad Furqan', 'Dewasa', '1604321', 260);
-
--- --------------------------------------------------------
-
---
--- Structure for view `temp`
---
-DROP TABLE IF EXISTS `temp`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `temp`  AS  select `pemesanan`.`tgl_pemesanan` AS `tgl_pemesanan`,`pemesanan`.`status` AS `status` from `pemesanan` where (`pemesanan`.`status` = 'Proses') ;
 
 --
 -- Constraints for dumped tables
